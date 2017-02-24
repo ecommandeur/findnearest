@@ -1,0 +1,36 @@
+= Find Nearest
+
+Commandline tool to find the nearest spatial object in one file (the universe) to each spatial object in another file (the target). This is inspired by the Find Nearest Tool in Alteryx. 
+
+Start with implementing this for point fields. 
+
+CAUTION: This is Work in Progress
+
+
+== Background information
+
+=== About dependencies
+
+Tried out https://github.com/paulmach/go.geo , but first distance I checked did not match what I expected.
+
+----
+p1 := geo.NewPointFromLatLng(51.92125, 6.57755)
+p2 := geo.NewPointFromLatLng(52.377777, 4.905169)
+d := p1.GeoDistanceFrom(p2) // returned 125028.11381517348
+----
+
+Expected to get back 124884.2565(..) based on http://www.movable-type.co.uk/scripts/latlong.html and Integrator kilometers() function.
+
+----
+
+----
+
+=== Geo in Golang
+
+https://blog.gopheracademy.com/advent-2015/geographical-data-manipulation-using-go/
+
+https://medium.com/@buckhx/unwinding-uber-s-most-efficient-service-406413c5871d#.1ept34xfq
+
+=== How much distance does a degree, minute and second cover on your maps?
+(source https://www2.usgs.gov/faq/categories/9794/3022 )
+The distances vary. A degree, minute or second of latitude remains fairly constant from the equator to the poles; however a degree, minute, or second of longitude can vary greatly as one approaches the poles (because of the convergence of the meridians). At 38 degrees North latitude, one degree of latitude equals approximately 364,000 ft (69 miles), one minute equals 6068 ft (1.15 miles), one-second equals 101 ft; one-degree of longitude equals 288,200 ft (54.6 miles), one minute equals 4800 ft (0.91 mile), and one second equals 80 ft.

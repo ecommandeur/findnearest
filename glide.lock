@@ -1,0 +1,27 @@
+hash: 68245910b0d4fecc5e7fbd9a441f612bef5f616f0a147a8326591e4b2ab19f57
+updated: 2017-02-23T14:54:29.4989434+01:00
+imports:
+- name: github.com/erikstmartin/go-testdb
+  version: 8d10e4a1bae52cd8b81ffdec3445890d6dccab3d
+  subpackages:
+  - github.com\erikstmartin\go-testdb
+- name: github.com/kellydunn/golang-geo
+  version: 6f16b0ccf2a6ebd1a234daacfb6199510fbd0db4
+  subpackages:
+  - github.com\kellydunn\golang-geo
+- name: github.com/kylelemons/go-gypsy
+  version: 08cad365cd28a7fba23bb1e57aa43c5e18ad8bb8
+  subpackages:
+  - github.com\kylelemons\go-gypsy\yaml
+- name: github.com/lib/pq
+  version: ba5d4f7a35561e22fbdf7a39aa0070f4d460cfc0
+  subpackages:
+  - github.com\lib\pq
+  - github.com\lib\pq\oid
+- name: github.com/ziutek/mymysql
+  version: 0582bcf675f52c0c2045c027fd135bd726048f45
+  subpackages:
+  - github.com\ziutek\mymysql\godrv
+  - github.com\ziutek\mymysql\mysql
+  - github.com\ziutek\mymysql\native
+devImports: []

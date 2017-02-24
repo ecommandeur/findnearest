@@ -1,0 +1,6 @@
+#dirs
+resources
+vendor
+
+#files
+fn.bat

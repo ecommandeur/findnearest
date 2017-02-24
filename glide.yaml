@@ -1,0 +1,5 @@
+package: github.com/ecommand/findnearest
+import:
+- package: github.com/kellydunn/golang-geo
+  subpackages:
+  - github.com\kellydunn\golang-geo
