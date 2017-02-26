@@ -1,27 +1,8 @@
-hash: 68245910b0d4fecc5e7fbd9a441f612bef5f616f0a147a8326591e4b2ab19f57
-updated: 2017-02-23T14:54:29.4989434+01:00
+hash: 25f2f5cc320ff33a4c6793846d0e2518e17fe169655ad91668882c72c5137c18
+updated: 2017-02-26T21:47:44.0982299+01:00
 imports:
-- name: github.com/erikstmartin/go-testdb
-  version: 8d10e4a1bae52cd8b81ffdec3445890d6dccab3d
-  subpackages:
-  - github.com\erikstmartin\go-testdb
-- name: github.com/kellydunn/golang-geo
-  version: 6f16b0ccf2a6ebd1a234daacfb6199510fbd0db4
-  subpackages:
-  - github.com\kellydunn\golang-geo
-- name: github.com/kylelemons/go-gypsy
-  version: 08cad365cd28a7fba23bb1e57aa43c5e18ad8bb8
-  subpackages:
-  - github.com\kylelemons\go-gypsy\yaml
-- name: github.com/lib/pq
-  version: ba5d4f7a35561e22fbdf7a39aa0070f4d460cfc0
-  subpackages:
-  - github.com\lib\pq
-  - github.com\lib\pq\oid
-- name: github.com/ziutek/mymysql
-  version: 0582bcf675f52c0c2045c027fd135bd726048f45
-  subpackages:
-  - github.com\ziutek\mymysql\godrv
-  - github.com\ziutek\mymysql\mysql
-  - github.com\ziutek\mymysql\native
+- name: github.com/paulmach/go.geo
+  version: afb0601c021c5ace3be4ada8e7746070a91b43ae
+- name: github.com/paulmach/go.geojson
+  version: 6228f9f0660a1820e47c84d5cab6b72c8473023c
 devImports: []
