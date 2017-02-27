@@ -1,24 +1,29 @@
 = Find Nearest
 
-Commandline tool to find the nearest spatial object in one file (the universe) to each spatial object in another file (the target). This is inspired by the Find Nearest Tool in Alteryx. 
+Commandline tool to find the nearest spatial object(s) in one file (the universe) to each spatial object in another file (the target). This tool is inspired by the Find Nearest Tool in Alteryx. 
 
 Start with implementing this for point fields. 
 
 CAUTION: This is Work in Progress
 
+== Usage
+
+----
+findnearest -target [path to target] -universe [path to universe]
+----
 
 == Background information
 
-=== About dependencies
+=== GeoDistance in go.geo
 
-Findnearest uses go.geo, because it does not have any other dependencies outside go.geojson.
-
-Geo distance calculated by go.geo differs from http://www.movable-type.co.uk/scripts/latlong.html even when haversine option is set to true, because go.geo uses a more precise earth radius.
+The GeoDistance calculated by go.geo differs from http://www.movable-type.co.uk/scripts/latlong.html even when haversine option is set to true, because go.geo uses a more precise earth radius.
 
 ----
 p1 := geo.NewPointFromLatLng(51.92125, 6.57755)
 p2 := geo.NewPointFromLatLng(52.377777, 4.905169)
-d := p1.GeoDistanceFrom(p2, true) // yields 
+d1 := p1.GeoDistanceFrom(p2, true) // distance is 125024.15596760742 m
+geo.EarthRadius = 6371000.0 // set earth radius to value used by movable-type or golang-geo
+d2 := p1.GeoDistanceFrom(p2, true) // distance is 124884.25658928727 m or 124.88 km
 ----
 
 === Geo in Golang

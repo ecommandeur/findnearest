@@ -12,13 +12,22 @@ import (
 	"github.com/paulmach/go.geo"
 )
 
+//TODO move initialization of flags to init function
+// see https://github.com/spiffytech/csvmaster/blob/master/csvmaster.go
+
 func main() {
+
+	const VERSION = "0.1-SNAPSHOT"
 
 	// -----
 	// ARGUMENTS
 	// -----
 	var tgt string
 	var univ string
+	var tlat, tlng int
+	var ulat, ulng int
+	var printVersion bool
+	//var printHelp bool
 
 	//TODO get lat / lngg indices for target as arguments
 	//TODO get lat / long indices for universe as arguments
@@ -27,7 +36,15 @@ func main() {
 
 	flag.StringVar(&tgt, "target", "", "(Required) Path to target file.")
 	flag.StringVar(&univ, "universe", "", "(Required) Path to universe file.")
-	//flag.StringVar(&univ, "universe", "", "(Required) Path to universe file.")
+	flag.IntVar(&tlat, "tlat", 0, "(Required) Index of Latitude column in target file.")
+	flag.IntVar(&tlng, "tlng", 0, "(Required) Index of Latitude column in target file.")
+
+	//flag.StringVar(&tSep, "tsep", "(Required) Field separator in target file.")
+	flag.IntVar(&ulat, "ulat", 0, "(Required) Index of Latitude column in universe file.")
+	flag.IntVar(&ulng, "ulng", 0, "(Required) Index of Longitude column in universe file.")
+
+	flag.BoolVar(&printVersion, "version", false, "Print program version")
+	//flag.BoolVar(&printHelp, "h", false, "Print help")
 
 	flag.Parse()
 
@@ -35,7 +52,16 @@ func main() {
 	// DO STH WITH ALL THOSE NICE ARGUMENTS
 	// -----
 
+	if printVersion == true {
+		fmt.Println("findnearest version", VERSION)
+		os.Exit(0)
+	}
+
 	////
+	if tgt == "" || univ == "" {
+		printUsage()
+		os.Exit(1)
+	}
 
 	fmt.Println("Target file: ", tgt)
 	fmt.Println("Universe file: ", univ)
@@ -53,20 +79,37 @@ func main() {
 	exitOnError(err, "Oops, cannot create result file.")
 	defer outputFile.Close()
 
+	if tlat < 1 {
+		fmt.Println("Please provide a positive integer as value for tlat.")
+		os.Exit(1)
+	}
+	if tlng < 1 {
+		fmt.Println("Please provide a positive integer as value for tlng.")
+		os.Exit(1)
+	}
+	if ulat < 1 {
+		fmt.Println("Please provide a positive integer as value for ulat.")
+		os.Exit(1)
+	}
+	if ulng < 1 {
+		fmt.Println("Please provide a positive integer as value for tlng.")
+		os.Exit(1)
+	}
+
 	targetReader := csv.NewReader(targetFile)
 	targetReader.Comma = ';' // Use semi-colon instead of comma
 	//targetReader.FieldsPerRecord = -1 // number of expected fields ???
 	targetData, err := targetReader.ReadAll()
 	exitOnError(err, "Could not read target data")
-	targetLatIndex := 6
-	targetLngIndex := 7
+	targetLatIndex := tlat - 1 // slice index starts at zero, tlat at 1
+	targetLngIndex := tlng - 1 // slice index starts at zero, tlng at 1
 
 	universeReader := csv.NewReader(universeFile)
 	universeReader.Comma = '\t' // Use tab instead of comma
 	universeData, err := universeReader.ReadAll()
 	exitOnError(err, "Could not read universe data")
-	universeLatIndex := 3
-	universeLngIndex := 2
+	universeLatIndex := ulat - 1 // slice index starts at zero, ulat at 1
+	universeLngIndex := ulng - 1 // slice index starts at zero, ulng at 1
 
 	var results [][]string
 	var nearest []string
@@ -123,9 +166,6 @@ func main() {
 		results = append(results, result)
 	}
 
-	//fmt.Println("Nearest and dearest")
-	//fmt.Println(results)
-
 	csvWriter := csv.NewWriter(outputFile)
 	csvWriter.WriteAll(results)
 }
@@ -158,4 +198,17 @@ func max(x int, y int) int {
 		return x
 	}
 	return y
+}
+
+// printUsage prints usage output
+//TODO see if this makes sense given automatic -h -help handling
+func printUsage() {
+	println("findnearest version 0.1-SNAPSHOT")
+	println("")
+	println("Usage:")
+	flag.PrintDefaults()
+	//println("")
+	//println("Examples:")
+	//println("  arrivahash -value 1 -salt 2")
+	//println("  arrivahash -file \"/path/to/file\" -salt 2 > myOutput.txt")
 }
