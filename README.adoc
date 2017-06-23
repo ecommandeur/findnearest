@@ -3,6 +3,7 @@
 Commandline tool to find the nearest spatial object(s) in one file (the universe) to each spatial object in another file (the target). This tool is inspired by the Find Nearest Tool in Alteryx. 
 
 Start with implementing this for point fields. 
+This should use a spatial index.
 
 CAUTION: This is Work in Progress
 

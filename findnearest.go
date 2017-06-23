@@ -15,9 +15,11 @@ import (
 //TODO move initialization of flags to init function
 // see https://github.com/spiffytech/csvmaster/blob/master/csvmaster.go
 
+//TODO rewrite to leverage spatial index
+
 func main() {
 
-	const VERSION = "0.1-SNAPSHOT"
+	const VERSION = "0.2-SNAPSHOT"
 
 	// -----
 	// ARGUMENTS
@@ -26,12 +28,12 @@ func main() {
 	var univ string
 	var tlat, tlng int
 	var ulat, ulng int
+	var tsep, usep string
 	var printVersion bool
 	//var printHelp bool
 
-	//TODO get lat / lngg indices for target as arguments
-	//TODO get lat / long indices for universe as arguments
 	//var verbose bool
+	//TODO support more than one match
 	//var nummatches int
 
 	flag.StringVar(&tgt, "target", "", "(Required) Path to target file.")
@@ -42,6 +44,9 @@ func main() {
 	//flag.StringVar(&tSep, "tsep", "(Required) Field separator in target file.")
 	flag.IntVar(&ulat, "ulat", 0, "(Required) Index of Latitude column in universe file.")
 	flag.IntVar(&ulng, "ulng", 0, "(Required) Index of Longitude column in universe file.")
+
+	flag.StringVar(&tsep, "tsep", ",", "(Optional) Field separator in target file ('tab' for tab-separated).")
+	flag.StringVar(&usep, "usep", ",", "(Optional) Field separator in universe file ('tab' for tab-separated).")
 
 	flag.BoolVar(&printVersion, "version", false, "Print program version")
 	//flag.BoolVar(&printHelp, "h", false, "Print help")
@@ -64,7 +69,9 @@ func main() {
 	}
 
 	fmt.Println("Target file: ", tgt)
+	fmt.Println("Target file separator: ", tsep)
 	fmt.Println("Universe file: ", univ)
+	fmt.Println("Target file separator: ", usep)
 	fmt.Println("Output file: result.csv")
 
 	targetFile, err := os.Open(tgt)
@@ -97,7 +104,8 @@ func main() {
 	}
 
 	targetReader := csv.NewReader(targetFile)
-	targetReader.Comma = ';' // Use semi-colon instead of comma
+	//targetReader.Comma = ';'                // Use semi-colon instead of comma
+	targetReader.Comma = getSeparator(tsep) // Use semi-colon instead of comma
 	//targetReader.FieldsPerRecord = -1 // number of expected fields ???
 	targetData, err := targetReader.ReadAll()
 	exitOnError(err, "Could not read target data")
@@ -105,7 +113,8 @@ func main() {
 	targetLngIndex := tlng - 1 // slice index starts at zero, tlng at 1
 
 	universeReader := csv.NewReader(universeFile)
-	universeReader.Comma = '\t' // Use tab instead of comma
+	//universeReader.Comma = '\t' // Use tab instead of comma
+	universeReader.Comma = getSeparator(usep)
 	universeData, err := universeReader.ReadAll()
 	exitOnError(err, "Could not read universe data")
 	universeLatIndex := ulat - 1 // slice index starts at zero, ulat at 1
@@ -198,6 +207,28 @@ func max(x int, y int) int {
 		return x
 	}
 	return y
+}
+
+// getSeparator converts a separator string to a rune
+// Copied from https://github.com/spiffytech/csvmaster/blob/master/csvmaster.go
+func getSeparator(sepString string) (sepRune rune) {
+	sepString = `'` + sepString + `'`
+	sepRunes, err := strconv.Unquote(sepString)
+	if err != nil {
+		if err.Error() == "invalid syntax" { // Single quote was used as separator. No idea why someone would want this, but it doesn't hurt to support it
+			sepString = `"` + sepString + `"`
+			sepRunes, err = strconv.Unquote(sepString)
+			if err != nil {
+				panic(err)
+			}
+
+		} else {
+			panic(err)
+		}
+	}
+	sepRune = ([]rune(sepRunes))[0]
+
+	return sepRune
 }
 
 // printUsage prints usage output
