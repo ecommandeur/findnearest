@@ -1,8 +1,14 @@
-hash: 25f2f5cc320ff33a4c6793846d0e2518e17fe169655ad91668882c72c5137c18
-updated: 2017-02-26T21:47:44.0982299+01:00
+hash: 31306173fbe53b161e6a14136a143cb904c1f1993ccc3b5065042e84f83a8e56
+updated: 2017-06-27T22:27:18.2972352+02:00
 imports:
+- name: github.com/hailocab/go-geoindex
+  version: 64631bfe9711db743898df0295316784c876d29c
 - name: github.com/paulmach/go.geo
-  version: afb0601c021c5ace3be4ada8e7746070a91b43ae
+  version: b160a6efed6c2a8af1b59ce870dd8802056fcad5
+  subpackages:
+  - github.com\paulmach\go.geo
 - name: github.com/paulmach/go.geojson
-  version: 6228f9f0660a1820e47c84d5cab6b72c8473023c
+  version: 40612a87147b9cf5cd0e397ced54d89e623647ff
+  subpackages:
+  - github.com\paulmach\go.geojson
 devImports: []

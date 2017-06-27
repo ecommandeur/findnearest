@@ -2,3 +2,4 @@ package: github.com/ecommand/findnearest
 import:
 - package: github.com/paulmach/go.geo
 - package: github.com/paulmach/go.geojson
+- package: github.com/hailocab/go-geoindex

@@ -9,25 +9,37 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hailocab/go-geoindex"
 	"github.com/paulmach/go.geo"
 )
 
-//TODO move initialization of flags to init function
+//TODO move initialization of flags to init function???
 // see https://github.com/spiffytech/csvmaster/blob/master/csvmaster.go
 
 //TODO rewrite to leverage spatial index
 
-func main() {
+//VERSION is the version number of findnearest
+const VERSION = "0.3-SNAPSHOT"
 
-	const VERSION = "0.2-SNAPSHOT"
+//NAIVE  if set to false that will prevent execution of naive code
+// naive code should be cleaned up if index works
+const NAIVE = true
+
+var (
+	all = func(_ geoindex.Point) bool { return true }
+)
+
+func main() {
 
 	// -----
 	// ARGUMENTS
 	// -----
 	var tgt string
 	var univ string
-	var tlat, tlng int
-	var ulat, ulng int
+	var tlat, tlng int //tlat_index, tlng_index
+	//also allow tlat_name, tlng_name ???
+	var ulat, ulng int //ulat_index, ulng_index
+	//also allow ulat_name, ulng_name ???
 	var tsep, usep string
 	var printVersion bool
 	//var printHelp bool
@@ -123,60 +135,127 @@ func main() {
 	var results [][]string
 	var nearest []string
 	var lowestDistance float64
+
 	maxTIndex := max(targetLatIndex, targetLngIndex)
 	maxUIndex := max(universeLatIndex, universeLngIndex)
 	header := append(targetData[0], universeData[0]...) //TODO allow files without header
 	results = append(results, header)
-	for k, r := range targetData {
-		//TODO allow files without header
-		if k < 1 {
-			continue
-		}
-		l := len(r)
-		if l <= maxTIndex {
-			fmt.Println("Target LatLng index out of range at line ", k+1, "")
-			continue
-		}
-		p, err := newPointFromLatLngStrings(r[targetLatIndex], r[targetLngIndex])
-		if err != nil {
-			fmt.Println(err.Error(), " at line ", k+1)
-			continue
-		}
-		//TODO see if we can do this in a smarter way. For now, do it brute force
-		// for each target record, look at all universeData
-		for key, record := range universeData {
-			// skip headers
-			if key < 1 {
+
+	pointsIndex := geoindex.NewPointsIndex(geoindex.Km(0.5))
+
+	if !NAIVE {
+		for ukey, urecord := range universeData {
+			if ukey < 1 {
 				continue
 			}
-			l := len(record)
+			l := len(urecord)
 			if l <= maxUIndex {
-				fmt.Println("Universe LatLng index out of range at line ", key+1, "")
+				fmt.Println("Universe LatLng index out of range at line ", ukey+1, "")
 				continue
 			}
-			up, err := newPointFromLatLngStrings(record[universeLatIndex], record[universeLngIndex])
-			if err != nil {
-				fmt.Println(err.Error())
-				continue
-			}
-			dist := p.GeoDistanceFrom(up, true)
-			if key == 1 {
-				lowestDistance = dist
-				nearest = record
-				//fmt.Println("Init lowestDistance to ", lowestDistance)
-				continue
-			}
-			if dist < lowestDistance {
-				lowestDistance = dist
-				nearest = record
-			}
+
+			//TODO check if we actually find lat lng coordinates at index
+			universeLat, _ := strconv.ParseFloat(urecord[universeLatIndex], 64)
+			universeLng, _ := strconv.ParseFloat(urecord[universeLngIndex], 64)
+
+			//		up, err := newPointFromLatLngStrings(record[universeLatIndex], record[universeLngIndex])
+			//		if err != nil {
+			//			fmt.Println(err.Error())
+			//			continue
+			//		}
+
+			upoint := &geoindex.GeoPoint{Pid: strconv.Itoa(ukey), Plat: universeLat, Plon: universeLng}
+			pointsIndex.Add(upoint)
 		}
-		result := append(r, nearest...)
-		results = append(results, result)
+
+		for tkey, trecord := range targetData {
+			if tkey < 1 {
+				continue
+			}
+			l := len(trecord)
+			if l <= maxTIndex {
+				fmt.Println("Target LatLng index out of range at line ", tkey+1, "")
+				continue
+			}
+
+			//TODO check if we actually find lat lng coordinates at index
+			targetLat, err := strconv.ParseFloat(trecord[targetLatIndex], 64)
+			if err != nil {
+				continue
+			}
+			targetLng, err := strconv.ParseFloat(trecord[targetLngIndex], 64)
+			if err != nil {
+				continue
+			}
+
+			tpoint := &geoindex.GeoPoint{Pid: strconv.Itoa(tkey), Plat: targetLat, Plon: targetLng}
+			//TODO allow N nearest vs just nearest
+			nearest := pointsIndex.KNearest(tpoint, 1, geoindex.Km(999.0), all)
+			fmt.Println("")
+			fmt.Println(nearest[0])
+			//TODO Pid is index in slice, which we can use to get full univers record back
+		}
+		//	allPoints := pointsIndex.GetAll()
+		//	fmt.Println("")
+		//	fmt.Println("All points in da index")
+		//	fmt.Println("")
+		//	for key, value := range allPoints {
+		//		fmt.Println("Key:", key, "Value:", value)
+		//	}
 	}
 
-	csvWriter := csv.NewWriter(outputFile)
-	csvWriter.WriteAll(results)
+	if NAIVE {
+		for k, r := range targetData {
+			//TODO allow files without header
+			if k < 1 {
+				continue
+			}
+			l := len(r)
+			if l <= maxTIndex {
+				fmt.Println("Target LatLng index out of range at line ", k+1, "")
+				continue
+			}
+			p, err := newPointFromLatLngStrings(r[targetLatIndex], r[targetLngIndex])
+			if err != nil {
+				fmt.Println(err.Error(), " at line ", k+1)
+				continue
+			}
+			//TODO see if we can do this in a smarter way. For now, do it brute force
+			// for each target record, look at all universeData
+			for key, record := range universeData {
+				// skip headers
+				if key < 1 {
+					continue
+				}
+				l := len(record)
+				if l <= maxUIndex {
+					fmt.Println("Universe LatLng index out of range at line ", key+1, "")
+					continue
+				}
+				up, err := newPointFromLatLngStrings(record[universeLatIndex], record[universeLngIndex])
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				dist := p.GeoDistanceFrom(up, true)
+				if key == 1 {
+					lowestDistance = dist
+					nearest = record
+					//fmt.Println("Init lowestDistance to ", lowestDistance)
+					continue
+				}
+				if dist < lowestDistance {
+					lowestDistance = dist
+					nearest = record
+				}
+			}
+			result := append(r, nearest...)
+			results = append(results, result)
+		}
+		csvWriter := csv.NewWriter(outputFile)
+		csvWriter.WriteAll(results)
+
+	}
 }
 
 // newPointFromLatLngStrings takes two strings that are supposedly lat/lng
@@ -234,7 +313,7 @@ func getSeparator(sepString string) (sepRune rune) {
 // printUsage prints usage output
 //TODO see if this makes sense given automatic -h -help handling
 func printUsage() {
-	println("findnearest version 0.1-SNAPSHOT")
+	println("findnearest version " + VERSION)
 	println("")
 	println("Usage:")
 	flag.PrintDefaults()
