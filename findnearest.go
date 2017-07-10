@@ -16,14 +16,14 @@ import (
 //TODO move initialization of flags to init function???
 // see https://github.com/spiffytech/csvmaster/blob/master/csvmaster.go
 
-//TODO rewrite to leverage spatial index
+//TODO rewrite to leverage spatial index - WIP
 
 //VERSION is the version number of findnearest
-const VERSION = "0.3-SNAPSHOT"
+const VERSION = "0.3.1-SNAPSHOT"
 
 //NAIVE  if set to false that will prevent execution of naive code
 // naive code should be cleaned up if index works
-const NAIVE = true
+const NAIVE = false
 
 var (
 	all = func(_ geoindex.Point) bool { return true }
@@ -41,9 +41,11 @@ func main() {
 	var ulat, ulng int //ulat_index, ulng_index
 	//also allow ulat_name, ulng_name ???
 	var tsep, usep string
+	var out string
 	var printVersion bool
 	//var printHelp bool
 
+	//TODO let max distance be parameter
 	//var verbose bool
 	//TODO support more than one match
 	//var nummatches int
@@ -60,6 +62,7 @@ func main() {
 	flag.StringVar(&tsep, "tsep", ",", "(Optional) Field separator in target file ('tab' for tab-separated).")
 	flag.StringVar(&usep, "usep", ",", "(Optional) Field separator in universe file ('tab' for tab-separated).")
 
+	flag.StringVar(&out, "out", "result.csv", "(Optional) Full path to output file")
 	flag.BoolVar(&printVersion, "version", false, "Print program version")
 	//flag.BoolVar(&printHelp, "h", false, "Print help")
 
@@ -84,7 +87,7 @@ func main() {
 	fmt.Println("Target file separator: ", tsep)
 	fmt.Println("Universe file: ", univ)
 	fmt.Println("Target file separator: ", usep)
-	fmt.Println("Output file: result.csv")
+	fmt.Println("Output file: ", out)
 
 	targetFile, err := os.Open(tgt)
 	exitOnError(err, "Oops, cannot find target file "+tgt)
@@ -181,27 +184,34 @@ func main() {
 			//TODO check if we actually find lat lng coordinates at index
 			targetLat, err := strconv.ParseFloat(trecord[targetLatIndex], 64)
 			if err != nil {
+				//TODO provide feedback that no lat coordinate was found
 				continue
 			}
 			targetLng, err := strconv.ParseFloat(trecord[targetLngIndex], 64)
 			if err != nil {
+				//TODO provide feedback that no lng coordinates were found
 				continue
 			}
 
 			tpoint := &geoindex.GeoPoint{Pid: strconv.Itoa(tkey), Plat: targetLat, Plon: targetLng}
 			//TODO allow N nearest vs just nearest
+			// but how do we save this in output ??? prefix columns from universe ???
+			//TODO what happens if KNearest does not return any point
+			//NOTE this is probably faster if Km is lower (add this as parameter)
 			nearest := pointsIndex.KNearest(tpoint, 1, geoindex.Km(999.0), all)
-			fmt.Println("")
-			fmt.Println(nearest[0])
-			//TODO Pid is index in slice, which we can use to get full univers record back
+			nPoint := nearest[0]
+			//TODO check if nPoint is a point, otherwise continue
+			nID := nPoint.Id()
+			//since we add the slice index as id to GeoPoint for universe records
+			// Atoi should never return an error if we have at least one result for nearest
+			uIndex, _ := strconv.Atoi(nID)
+			uRecord := universeData[uIndex]
+			result := append(trecord, uRecord...)
+			results = append(results, result)
 		}
-		//	allPoints := pointsIndex.GetAll()
-		//	fmt.Println("")
-		//	fmt.Println("All points in da index")
-		//	fmt.Println("")
-		//	for key, value := range allPoints {
-		//		fmt.Println("Key:", key, "Value:", value)
-		//	}
+
+		csvWriter := csv.NewWriter(outputFile)
+		csvWriter.WriteAll(results)
 	}
 
 	if NAIVE {
