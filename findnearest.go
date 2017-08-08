@@ -19,7 +19,7 @@ import (
 //TODO rewrite to leverage spatial index - WIP
 
 //VERSION is the version number of findnearest
-const VERSION = "0.3.1-SNAPSHOT"
+const VERSION = "0.3.1"
 
 //NAIVE  if set to false that will prevent execution of naive code
 // naive code should be cleaned up if index works
@@ -97,7 +97,7 @@ func main() {
 	exitOnError(err, "Oops, cannot find universe file "+univ)
 	defer universeFile.Close()
 
-	outputFile, err := os.Create("result.csv")
+	outputFile, err := os.Create(out)
 	exitOnError(err, "Oops, cannot create result file.")
 	defer outputFile.Close()
 
@@ -326,6 +326,8 @@ func printUsage() {
 	println("findnearest version " + VERSION)
 	println("")
 	println("Usage:")
+	// Some dependency imports testing package in non test files, because printDefaults prints all test flags
+	// https://www.gmarik.info/blog/2016/go-testing-package-side-effects/
 	flag.PrintDefaults()
 	//println("")
 	//println("Examples:")
