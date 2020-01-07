@@ -1,0 +1,4 @@
+punt;lat;lon
+Pieterskerk, Leiden;52.157700;4.488575
+Dom Tower of Utrecht, Utrecht;52.090752;5.121630
+Martinikerk, Groningen;53.219383;6.566502

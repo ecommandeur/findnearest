@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/hailocab/go-geoindex"
-	"github.com/paulmach/go.geo"
+	geo "github.com/paulmach/go.geo"
 )
 
 //TODO move initialization of flags to init function???
@@ -19,7 +19,7 @@ import (
 //TODO rewrite to leverage spatial index - WIP
 
 //VERSION is the version number of findnearest
-const VERSION = "0.3.1"
+const VERSION = "0.4"
 
 //NAIVE  if set to false that will prevent execution of naive code
 // naive code should be cleaned up if index works
@@ -42,6 +42,7 @@ func main() {
 	//also allow ulat_name, ulng_name ???
 	var tsep, usep string
 	var out string
+	var calcDist bool
 	var printVersion bool
 	//var printHelp bool
 
@@ -63,6 +64,7 @@ func main() {
 	flag.StringVar(&usep, "usep", ",", "(Optional) Field separator in universe file ('tab' for tab-separated).")
 
 	flag.StringVar(&out, "out", "result.csv", "(Optional) Full path to output file")
+	flag.BoolVar(&calcDist, "dist", true, "Calculate and add distance column.")
 	flag.BoolVar(&printVersion, "version", false, "Print program version")
 	//flag.BoolVar(&printHelp, "h", false, "Print help")
 
@@ -142,6 +144,10 @@ func main() {
 	maxTIndex := max(targetLatIndex, targetLngIndex)
 	maxUIndex := max(universeLatIndex, universeLngIndex)
 	header := append(targetData[0], universeData[0]...) //TODO allow files without header
+	// add an extra column for the distance between target and universe points
+	if calcDist {
+		header = append(header, "Distance")
+	}
 	results = append(results, header)
 
 	pointsIndex := geoindex.NewPointsIndex(geoindex.Km(0.5))
@@ -206,7 +212,12 @@ func main() {
 			// Atoi should never return an error if we have at least one result for nearest
 			uIndex, _ := strconv.Atoi(nID)
 			uRecord := universeData[uIndex]
+			tuDistance := geoindex.Distance(tpoint, nPoint)
 			result := append(trecord, uRecord...)
+			// calculate and add the distance to the result file in the last column
+			if calcDist {
+				result = append(result, fmt.Sprintf("%f", tuDistance))
+			}
 			results = append(results, result)
 		}
 
