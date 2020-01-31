@@ -183,7 +183,6 @@ func main() {
 
 	fmt.Println("Iterating target data to find nearest neighbours.")
 	for tkey, trecord := range targetData {
-		fmt.Println("tkey: ", tkey)
 		if tkey < 1 {
 			continue
 		}
@@ -215,17 +214,14 @@ func main() {
 			fmt.Println("Target Lng at line ", tkey+1, " is out of range (-180,180)")
 			continue
 		}
-		//DEBUG fmt.Println("targetLat: ", targetLat, " targetLng: ", targetLng)
 		tpoint := &geoindex.GeoPoint{Pid: strconv.Itoa(tkey), Plat: targetLat, Plon: targetLng}
 		//NOTE this may be faster if Km is lower. We should add Km as a parameter
 		nearest := pointsIndex.KNearest(tpoint, 1, geoindex.Km(999.0), all)
 		nearestLen := len(nearest)
-		fmt.Println("nearest len: ", nearestLen)
 		if len(nearest) == 0 {
 			continue
 		}
 		nPoint := nearest[0]
-		//DEBUG fmt.Println("Nearest Point id: ", nPoint.Id(), " lat: ", nPoint.Lat(), " lon: ", nPoint.Lon())
 		nID := nPoint.Id()
 		//since we add the slice index as id to GeoPoint for universe records
 		// Atoi should never return an error if we have at least one result for nearest
