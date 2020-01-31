@@ -217,7 +217,6 @@ func main() {
 		tpoint := &geoindex.GeoPoint{Pid: strconv.Itoa(tkey), Plat: targetLat, Plon: targetLng}
 		//NOTE this may be faster if Km is lower. We should add Km as a parameter
 		nearest := pointsIndex.KNearest(tpoint, 1, geoindex.Km(999.0), all)
-		nearestLen := len(nearest)
 		if len(nearest) == 0 {
 			continue
 		}
