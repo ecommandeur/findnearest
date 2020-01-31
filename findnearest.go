@@ -13,11 +13,11 @@ import (
 	geo "github.com/paulmach/go.geo"
 )
 
-//TODO move initialization of flags to init function???
+//NOTE Move initialization of flags to init function???
 // see https://github.com/spiffytech/csvmaster/blob/master/csvmaster.go
 
 //VERSION is the version number of findnearest
-const VERSION = "0.4"
+const VERSION = "0.5"
 
 var (
 	all = func(_ geoindex.Point) bool { return true }
@@ -143,6 +143,7 @@ func main() {
 
 	pointsIndex := geoindex.NewPointsIndex(geoindex.Km(0.5))
 
+	fmt.Println("Iterating universe data to build index.")
 	for ukey, urecord := range universeData {
 		if ukey < 1 {
 			continue
@@ -154,20 +155,35 @@ func main() {
 		}
 
 		//TODO check if we actually find lat lng coordinates at index
-		universeLat, _ := strconv.ParseFloat(urecord[universeLatIndex], 64)
-		universeLng, _ := strconv.ParseFloat(urecord[universeLngIndex], 64)
-
-		//		up, err := newPointFromLatLngStrings(record[universeLatIndex], record[universeLngIndex])
-		//		if err != nil {
-		//			fmt.Println(err.Error())
-		//			continue
-		//		}
-
+		universeLatStr := strings.TrimSpace(urecord[universeLatIndex])
+		universeLat, err := strconv.ParseFloat(universeLatStr, 64)
+		if err != nil {
+			fmt.Println("Could not parse universe Lat at line ", ukey+1, "")
+			continue
+		}
+		//Latitudes range from -90 to 90
+		if universeLat < -90 && universeLat > 90 {
+			fmt.Println("Universe Lat at line ", ukey+1, " is out of range (-90,90)")
+			continue
+		}
+		universeLngStr := strings.TrimSpace(urecord[universeLngIndex])
+		universeLng, _ := strconv.ParseFloat(universeLngStr, 64)
+		if err != nil {
+			fmt.Println("Could not parse universe Lng at line ", ukey+1, "")
+			continue
+		}
+		//Longitudes range from -180 to 80
+		if universeLng < -180 && universeLat > 180 {
+			fmt.Println("Universe Lng at line ", ukey+1, " is out of range (-180,180)")
+			continue
+		}
 		upoint := &geoindex.GeoPoint{Pid: strconv.Itoa(ukey), Plat: universeLat, Plon: universeLng}
 		pointsIndex.Add(upoint)
 	}
 
+	fmt.Println("Iterating target data to find nearest neighbours.")
 	for tkey, trecord := range targetData {
+		fmt.Println("tkey: ", tkey)
 		if tkey < 1 {
 			continue
 		}
@@ -177,22 +193,39 @@ func main() {
 			continue
 		}
 
-		targetLat, err := strconv.ParseFloat(trecord[targetLatIndex], 64)
+		targetLatStr := strings.TrimSpace(trecord[targetLatIndex])
+		targetLat, err := strconv.ParseFloat(targetLatStr, 64)
 		if err != nil {
-			//Provide feedback that no lat coordinate was found?
+			fmt.Println("Could not parse target Lat at line ", tkey+1, "")
 			continue
 		}
-		targetLng, err := strconv.ParseFloat(trecord[targetLngIndex], 64)
-		if err != nil {
-			//Provide feedback that no lng coordinates were found?
+		//Latitudes range from -90 to 90
+		if targetLat < -90 && targetLat > 90 {
+			fmt.Println("Target Lat at line ", tkey+1, " is out of range (-90,90)")
 			continue
 		}
-
+		targetLngStr := strings.TrimSpace(trecord[targetLngIndex])
+		targetLng, err := strconv.ParseFloat(targetLngStr, 64)
+		if err != nil {
+			fmt.Println("Could not parse target Lng at line ", tkey+1, "")
+			continue
+		}
+		//Longitudes range from -180 to 80
+		if targetLat < -90 && targetLat > 90 {
+			fmt.Println("Target Lng at line ", tkey+1, " is out of range (-180,180)")
+			continue
+		}
+		//DEBUG fmt.Println("targetLat: ", targetLat, " targetLng: ", targetLng)
 		tpoint := &geoindex.GeoPoint{Pid: strconv.Itoa(tkey), Plat: targetLat, Plon: targetLng}
-		//NOTE this may be faster if Km is lower. We could add Km as a parameter)
+		//NOTE this may be faster if Km is lower. We should add Km as a parameter
 		nearest := pointsIndex.KNearest(tpoint, 1, geoindex.Km(999.0), all)
+		nearestLen := len(nearest)
+		fmt.Println("nearest len: ", nearestLen)
+		if len(nearest) == 0 {
+			continue
+		}
 		nPoint := nearest[0]
-		//TODO check if nPoint is a point, otherwise continue
+		//DEBUG fmt.Println("Nearest Point id: ", nPoint.Id(), " lat: ", nPoint.Lat(), " lon: ", nPoint.Lon())
 		nID := nPoint.Id()
 		//since we add the slice index as id to GeoPoint for universe records
 		// Atoi should never return an error if we have at least one result for nearest
